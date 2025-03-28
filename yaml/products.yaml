@@ -1,0 +1,17 @@
+produtos:
+  produtoA:
+    name: "Produto A"
+    description: "Standard candy box."
+    config: { Yellow: 2, Blue: 1, Green: 3 }
+  produtoB:
+    name: "Produto B"
+    description: "A different mix of candies."
+    config: { Yellow: 1, Blue: 2, Green: 4 }
+  produtoC:
+    name: "Produto C"
+    description: "Another variation of candy mix."
+    config: { Yellow: 3, Blue: 2, Green: 1 }
+  produtoD:
+    name: "Produto D"
+    description: "Includes a special red candy addition."
+    config: { Yellow: 2, Blue: 1, Green: 3, Red: 4 }
