@@ -5,10 +5,6 @@ import paho.mqtt.client as mqtt
 import sys
 import os
 
-# Add the parent directory to the path to import the module
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-# Import the module to test
 from app.mqtt_connection import MQTTConnection
 
 
