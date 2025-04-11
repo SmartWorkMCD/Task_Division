@@ -32,11 +32,13 @@ class MQTTConnection:
     
     def on_subscribe(self, client, userdata, mid, granted_qos):
         logging.info(f"Subscribed to broker {self.broker_id} with ID {mid} and QoS {granted_qos}")
-        return False
     
     def on_message(self, client, userdata, msg):
-        logging.info(f"Message received from broker {self.broker_id} on topic {msg.topic}: {msg.payload.decode()}")
-        return False
+        try:
+            message = msg.payload.decode()
+            logging.info(f"Message received from broker {self.broker_id} on topic {msg.topic}: {message}")
+        except Exception as e:
+            logging.error(f"Error decoding message: {e}")
 
     def connect(self):
         try:
@@ -65,8 +67,8 @@ class MQTTConnection:
         
     def subscribe(self, topic: str):
         try:
-            result = self.client.subscribe(topic)
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+            result, mid = self.client.subscribe(topic)
+            if result == mqtt.MQTT_ERR_SUCCESS:
                 logging.info(f"Subscribed to topic {topic}")
                 self.subscribed_topics.append(topic)
                 return True
