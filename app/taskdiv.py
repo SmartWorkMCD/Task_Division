@@ -23,13 +23,13 @@ class TimesMatrix:
         if not isinstance(tasks, list):
             raise TypeError("tasks must be a list.")
 
-        # matrix shape
-        self.total_tasks = len(tasks)
-        self.total_workers = workers_times.unique_workers
-
         # matrix content
-        self.tasks = tasks
+        self.flattened_tasks = [task for sublist in tasks for task in sublist]
         self.times = workers_times.data
+
+        # matrix shape
+        self.total_tasks = len(self.flattened_tasks)
+        self.total_workers = workers_times.unique_workers
         
         # encode workers for posterior use
         self.encoded_workers = workers_times.encoded_workers
@@ -39,7 +39,7 @@ class TimesMatrix:
 
     def _build_matrix(self):
         M = np.full((self.total_tasks, self.total_workers), np.inf)
-        for i, task in enumerate(self.tasks):
+        for i, task in enumerate(self.flattened_tasks):
             for worker, time in self.times[task].items():
                 j = self.encoded_workers[worker]
                 M[i, j] = time["EWMA(lag)"]       
@@ -123,23 +123,33 @@ def print_assignments_list(assignment_matrix, workers_info, tasks):
     decoded_workers = {i: w for w, i in workers_info.encoded_workers.items()}
 
     task_distribution = {w: [] for w in workers_info.workers}
-    for i, task in enumerate(tasks):
+    last_task_index = 0
+    for product_tasks in tasks:
+        tasks_per_product = {w: [] for w in workers_info.workers}
+        for task in product_tasks:
+            
+            # column where x[i][j] == 1
+            j = np.argmax(assignment_matrix[last_task_index])
 
-        # column where x[i][j] == 1
-        j = np.argmax(assignment_matrix[i])
+            # get the worker name
+            worker_name = decoded_workers[j]
 
-        # get the worker name
-        worker_name = decoded_workers[j]
+            # add the task to the worker's list
+            tasks_per_product[worker_name].append(task)
 
-        # add the task to the worker's list
-        task_distribution[worker_name].append(task)
+            # go to the next task aka matrix line
+            last_task_index += 1
+        
+        # add the tasks to the task distribution
+        for worker, tasks in tasks_per_product.items():
+            task_distribution[worker].append(tasks)
 
     return task_distribution
 
 
 # %%
 def update_times(inp_times, weight = 0.2):
-    """"""
+    """update inpt_times with the EWMA(lag) value"""
     for task, workers in inp_times.items():
         for worker, times in workers.items():
 
@@ -150,9 +160,11 @@ def update_times(inp_times, weight = 0.2):
             # if the task time was updated
             if times["EWMA(lag)"] is None:
                 times["EWMA(lag)"] = times["atual"]
+                times["atual"] = None
             else:
                 # calculate the EWMA(lag) using the formula
                 times["EWMA(lag)"] = (weight * times["atual"]) + ((1-weight) * times["EWMA(lag)"])
+                times["atual"] = None
 
     return inp_times
 
@@ -160,6 +172,9 @@ def update_times(inp_times, weight = 0.2):
 
 # %%
 if __name__ == "__main__":
+
+    # === INPUT ===
+    # Tasks times for each worker
     inp_times = {
         "T1A": {"W1": {"EWMA(lag)": None, "atual": 6}},
         "T1B": {"W1": {"EWMA(lag)": None, "atual": 3}},
@@ -170,22 +185,30 @@ if __name__ == "__main__":
         "T3B": {"W3": {"EWMA(lag)": None, "atual": 2}},
         "T3C": {"W3": {"EWMA(lag)": None, "atual": 2}},
     }
-    inp_tasks = ["T1A", "T1B", "T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"] # PASSAR A SER LISTA DE LISTAS
-    # [ [tarefas prod1], [tarefas prod2], ... ] até 5 produtos por exemplo
-    # aaa
-
     # cada vez que o tempo de uma tarefa é atualizado, o EWMA(lag) é atualizado
     inp_times = update_times(inp_times, weight=0.2)
+
+    # List of tasks to be assigned per product
+    inp_tasks = [["T1A", "T1B", "T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"],
+                 ["T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"],
+                 ["T1A", "T1B", "T1C", "T2", "T3A", "T3B", "T3C"],
+                 ["T1B", "T1B", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"],
+                 ["T1A", "T1B", "T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"]] 
+    
+    # === PROCESS ===    
 
     workers_info = WorkersInfo(inp_times)
     times_matrix = TimesMatrix(workers_info, inp_tasks)
 
     optimal_value, assignment_matrix = solve_task_assignment(times_matrix)
+
+
+    # === OUTPUT ===
+    print("Optimal value:", optimal_value)
+    print("Optimal assignment matrix:")
+    print(assignment_matrix)
     
     task_distribution = print_assignments_list(assignment_matrix, workers_info, inp_tasks)
-    print("Optimal value:", optimal_value)
-    print("Task distribution:")
+    # pretty print the task distribution
     for worker, tasks in task_distribution.items():
-        print(f"{worker}: {tasks}")
-
-    print(task_distribution) # para cada worker, listas de listas ex.: w1:[[tarefas a fazer pdor1], [tarefas a fazer pdor2], ...]
+        print(f"{worker}: {tasks}\n")
