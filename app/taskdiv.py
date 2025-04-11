@@ -172,7 +172,7 @@ if __name__ == "__main__":
     }
     inp_tasks = ["T1A", "T1B", "T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"] # PASSAR A SER LISTA DE LISTAS
     # [ [tarefas prod1], [tarefas prod2], ... ] até 5 produtos por exemplo
-    # 
+    # aaa
 
     # cada vez que o tempo de uma tarefa é atualizado, o EWMA(lag) é atualizado
     inp_times = update_times(inp_times, weight=0.2)
