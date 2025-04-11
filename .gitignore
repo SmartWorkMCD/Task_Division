@@ -177,3 +177,5 @@ cython_debug/
 .pypirc
 
 yaml/connections.example.yaml
+.DS_Store
+
