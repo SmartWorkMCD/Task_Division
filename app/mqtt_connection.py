@@ -22,20 +22,20 @@ class MQTTConnection:
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            logging.info(f"Conectado ao broker {self.broker_id}")
+            logging.info(f"Connected to broker {self.broker_id}")
             self.connected = True
         else:
-            logging.error(f"Falha ao conectar ao broker {self.broker_id}: {rc}")
+            logging.error(f"Failed to connect to broker {self.broker_id}: {rc}")
 
     def on_publish(self, client, userdata, mid):
-        logging.info(f"Mensagem publicada no broker {self.broker_id} com ID {mid}")
+        logging.info(f"Message published to broker {self.broker_id} with ID {mid}")
     
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        logging.info(f"Inscrito no broker {self.broker_id} com ID {mid} e QoS {granted_qos}")
+        logging.info(f"Subscribed to broker {self.broker_id} with ID {mid} and QoS {granted_qos}")
         return False
     
     def on_message(self, client, userdata, msg):
-        logging.info(f"Mensagem recebida no broker {self.broker_id} no tópico {msg.topic}: {msg.payload.decode()}")
+        logging.info(f"Message received from broker {self.broker_id} on topic {msg.topic}: {msg.payload.decode()}")
         return False
 
     def connect(self):
@@ -46,7 +46,7 @@ class MQTTConnection:
                 time.sleep(0.1)
             return True
         except Exception as e:
-            logging.error(f"Erro ao conectar ao broker {self.broker_id}: {e}")
+            logging.error(f"Error connecting to broker {self.broker_id}: {e}")
             return False
         
     def publish(self, topic: str, message: dict):
@@ -54,39 +54,40 @@ class MQTTConnection:
             payload = json.dumps(message)
             result = self.client.publish(topic, payload)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logging.info(f"Mensagem publicada em {topic}: {payload}")
+                logging.info(f"Message published to {topic}: {payload}")
                 return True
             else:
-                logging.error(f"Falha ao publicar mensagem em {topic}: {result.rc}")
+                logging.error(f"Failed to publish message to {topic}: {result.rc}")
                 return False
         except Exception as e:
-            logging.error(f"Erro ao publicar mensagem: {e}")
+            logging.error(f"Error publishing message: {e}")
             return False
         
     def subscribe(self, topic: str):
         try:
             result = self.client.subscribe(topic)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logging.info(f"Inscrito no tópico {topic}")
+                logging.info(f"Subscribed to topic {topic}")
+                self.subscribed_topics.append(topic)
                 return True
             else:
-                logging.error(f"Falha ao inscrever no tópico {topic}: {result.rc}")
+                logging.error(f"Failed to subscribe to topic {topic}: {result.rc}")
                 return False
         except Exception as e:
-            logging.error(f"Erro ao inscrever no tópico: {e}")
+            logging.error(f"Error subscribing to topic: {e}")
             return False
         
     def unsubscribe(self, topic: str):
         try:
             result = self.client.unsubscribe(topic)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logging.info(f"Desinscrito do tópico {topic}")
+                logging.info(f"Unsubscribed from topic {topic}")
                 return True
             else:
-                logging.error(f"Falha ao desinscrever do tópico {topic}: {result.rc}")
+                logging.error(f"Failed to unsubscribe from topic {topic}: {result.rc}")
                 return False
         except Exception as e:
-            logging.error(f"Erro ao desinscrever do tópico: {e}")
+            logging.error(f"Error unsubscribing from topic: {e}")
             return False
         
 
@@ -95,10 +96,9 @@ class MQTTConnection:
             self.client.unsubscribe(self.subscribed_topics)
             self.client.loop_stop()
             self.client.disconnect()
-            logging.info(f"Desconectado do broker {self.broker_id}")
+            logging.info(f"Disconnected from broker {self.broker_id}")
         except Exception as e:
-            logging.error(f"Erro ao desconectar do broker {self.broker_id}: {e}")
+            logging.error(f"Error disconnecting from broker {self.broker_id}: {e}")
             return False
         
         return True
-    
