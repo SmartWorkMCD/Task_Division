@@ -121,6 +121,35 @@ class TestMQTTConnection(unittest.TestCase):
         result = self.mqtt_connection.publish(topic, message)
         
         self.assertFalse(result)
+
+    def test_subscribe_success(self):
+        """Test successful subscription to a topic."""
+        topic = "test/topic"
+        
+        # Mock the subscribe result
+        mock_result = MagicMock()
+        mock_result.rc = mqtt.MQTT_ERR_SUCCESS
+        self.mock_client.subscribe.return_value = mock_result
+        
+        result = self.mqtt_connection.subscribe(topic)
+        
+        self.mock_client.subscribe.assert_called_once_with(topic)
+        self.assertTrue(result)
+
+    def test_subscribe_failure(self):
+        """Test failed subscription to a topic."""
+        topic = "test/topic"
+        
+        # Mock the subscribe result
+        mock_result = MagicMock()
+        mock_result.rc = mqtt.MQTT_ERR_NO_CONN
+        self.mock_client.subscribe.return_value = mock_result
+        
+        result = self.mqtt_connection.subscribe(topic)
+        
+        self.mock_client.subscribe.assert_called_once_with(topic)
+        self.assertFalse(result)
+        
     
     def test_disconnect_success(self):
         """Test successful disconnection from the broker."""
