@@ -16,6 +16,9 @@ class MQTTConnection:
         self.connected = False
         self.client.on_connect = self.on_connect
         self.client.on_publish = self.on_publish
+        self.client.on_subscribe = self.on_subscribe
+        self.client.on_message = self.on_message
+        self.subscribed_topics = [] 
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
@@ -27,6 +30,14 @@ class MQTTConnection:
     def on_publish(self, client, userdata, mid):
         logging.info(f"Mensagem publicada no broker {self.broker_id} com ID {mid}")
     
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        logging.info(f"Inscrito no broker {self.broker_id} com ID {mid} e QoS {granted_qos}")
+        return False
+    
+    def on_message(self, client, userdata, msg):
+        logging.info(f"Mensagem recebida no broker {self.broker_id} no tópico {msg.topic}: {msg.payload.decode()}")
+        return False
+
     def connect(self):
         try:
             self.client.connect(self.host, self.port)
@@ -52,9 +63,36 @@ class MQTTConnection:
             logging.error(f"Erro ao publicar mensagem: {e}")
             return False
         
+    def subscribe(self, topic: str):
+        try:
+            result = self.client.subscribe(topic)
+            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                logging.info(f"Inscrito no tópico {topic}")
+                return True
+            else:
+                logging.error(f"Falha ao inscrever no tópico {topic}: {result.rc}")
+                return False
+        except Exception as e:
+            logging.error(f"Erro ao inscrever no tópico: {e}")
+            return False
+        
+    def unsubscribe(self, topic: str):
+        try:
+            result = self.client.unsubscribe(topic)
+            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                logging.info(f"Desinscrito do tópico {topic}")
+                return True
+            else:
+                logging.error(f"Falha ao desinscrever do tópico {topic}: {result.rc}")
+                return False
+        except Exception as e:
+            logging.error(f"Erro ao desinscrever do tópico: {e}")
+            return False
+        
 
     def disconnect(self):
         try:
+            self.client.unsubscribe(self.subscribed_topics)
             self.client.loop_stop()
             self.client.disconnect()
             logging.info(f"Desconectado do broker {self.broker_id}")

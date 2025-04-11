@@ -9,6 +9,9 @@ from mqtt_connection import MQTTConnection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+TOPIC_PUBLISH_TASKS= "v1/devices/me/telemetry"
+TOPIC_SUBSCRIVE_BRAIN = "v1/devices/me/attributes"
+
 class TaskManager:
     def __init__(self, rules_yaml: dict):
         self.tasks = rules_yaml.get('tasks', {})
@@ -37,7 +40,6 @@ class MQTTProducerSystem:
         self.task_manager = TaskManager(YamlLoader.load_yaml(rules_file))
         self.broker_task_mapping = {'ws1': 'Task1', 'ws2': 'Task2', 'ws3': 'Task3'}
         self.connections = {}
-
         self._setup_connections()   
     
     def _setup_connections(self):

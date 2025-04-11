@@ -2,16 +2,48 @@ produtos:
   produtoA:
     name: "Produto A"
     description: "Standard candy box."
-    config: { Yellow: 2, Blue: 1, Green: 3 }
+    config: { Yellow: 2, Blue: 1, Green: 3, Orange: 1 }
   produtoB:
     name: "Produto B"
     description: "A different mix of candies."
-    config: { Yellow: 1, Blue: 2, Green: 4 }
+    config: { Yellow: 1, Blue: 2, Green: 4, Orange: 2 }
   produtoC:
     name: "Produto C"
     description: "Another variation of candy mix."
-    config: { Yellow: 3, Blue: 2, Green: 1 }
+    config: { Yellow: 3, Blue: 2, Green: 1, Orange: 3 }
   produtoD:
     name: "Produto D"
     description: "Includes a special red candy addition."
-    config: { Yellow: 2, Blue: 1, Green: 3, Red: 4 }
+    config: { Yellow: 2, Blue: 1, Green: 3, Red: 4, Orange: 2 }
+  produtoE:
+    name: "Produto E"
+    description: "A unique blend of candies."
+    config: { Yellow: 1, Blue: 3, Green: 2, Red: 1, Orange: 1 }
+  produtoF:
+    name: "Produto F"
+    description: "A special edition candy box."
+    config: { Yellow: 2, Blue: 2, Green: 2, Red: 2 }
+  produtoG:
+    name: "Produto G"
+    description: "A limited edition candy box."
+    config: { Yellow: 3, Blue: 3, Green: 3 }
+  produtoH:
+    name: "Produto H"
+    description: "A seasonal candy box."
+    config: { Yellow: 4, Blue: 4 }
+  produtoI:
+    name: "Produto I"
+    description: "A classic candy box."
+    config: { Yellow: 5 }
+  produtoJ:
+    name: "Produto J"
+    description: "A premium candy box."
+    config: { Yellow: 6 }
+  produtoK:
+    name: "Produto K"
+    description: "An exclusive candy box."
+    config: { Yellow: 7 }
+  produtoL:
+    name: "Produto L"
+    description: "A collector's candy box."
+    config: { Yellow: 8 }
