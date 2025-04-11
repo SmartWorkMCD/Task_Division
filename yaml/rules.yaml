@@ -30,6 +30,16 @@ tasks:
         task_description: "Ensure green candies are properly wrapped."
         rules:
           - rule1
+      Task1.D:
+        task_name: "Wrap Orange Candies"
+        task_description: "Ensure orange candies are properly wrapped."
+        rules:
+          - rule1
+      Task1.E:
+        task_name: "Wrap Red Candies"
+        task_description: "Ensure red candies are properly wrapped."
+        rules:
+          - rule1
 
   Task2:
     description: "Production Line (Combination Assembly)"
