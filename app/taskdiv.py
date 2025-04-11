@@ -42,7 +42,7 @@ class TimesMatrix:
         for i, task in enumerate(self.tasks):
             for worker, time in self.times[task].items():
                 j = self.encoded_workers[worker]
-                M[i, j] = time          
+                M[i, j] = time["EWMA(lag)"]       
         return M
     
     def __array__(self, dtype=float):
@@ -138,19 +138,44 @@ def print_assignments_list(assignment_matrix, workers_info, tasks):
 
 
 # %%
+def update_times(inp_times, weight = 0.2):
+    """"""
+    for task, workers in inp_times.items():
+        for worker, times in workers.items():
+
+            # if the task time was not updated
+            if times["atual"] is None:
+                continue
+
+            # if the task time was updated
+            if times["EWMA(lag)"] is None:
+                times["EWMA(lag)"] = times["atual"]
+            else:
+                # calculate the EWMA(lag) using the formula
+                times["EWMA(lag)"] = (weight * times["atual"]) + ((1-weight) * times["EWMA(lag)"])
+
+    return inp_times
+
+
+
+# %%
 if __name__ == "__main__":
     inp_times = {
-        "T1A": {"W1": 2},
-        "T1B": {"W1": 4},
-        "T1C": {"W1": 6,
-                "W2": 3},
-        "T2": {"W2": 9},
-        "T3A": {"W3": 2},
-        "T3B": {"W3": 2},
-        "T3C": {"W3": 2},
+        "T1A": {"W1": {"EWMA(lag)": None, "atual": 6}},
+        "T1B": {"W1": {"EWMA(lag)": None, "atual": 3}},
+        "T1C": {"W1": {"EWMA(lag)": None, "atual": 4},
+                "W2": {"EWMA(lag)": None, "atual": 5}},
+        "T2": {"W2": {"EWMA(lag)": None, "atual": 6}},
+        "T3A": {"W3": {"EWMA(lag)": None, "atual": 2}},
+        "T3B": {"W3": {"EWMA(lag)": None, "atual": 2}},
+        "T3C": {"W3": {"EWMA(lag)": None, "atual": 2}},
     }
-    inp_tasks = ["T1A", "T1B", "T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"]
+    inp_tasks = ["T1A", "T1B", "T1C", "T1C", "T1C", "T2", "T3A", "T3B", "T3C"] # PASSAR A SER LISTA DE LISTAS
+    # [ [tarefas prod1], [tarefas prod2], ... ] até 5 produtos por exemplo
+    # 
 
+    # cada vez que o tempo de uma tarefa é atualizado, o EWMA(lag) é atualizado
+    inp_times = update_times(inp_times, weight=0.2)
 
     workers_info = WorkersInfo(inp_times)
     times_matrix = TimesMatrix(workers_info, inp_tasks)
@@ -162,3 +187,5 @@ if __name__ == "__main__":
     print("Task distribution:")
     for worker, tasks in task_distribution.items():
         print(f"{worker}: {tasks}")
+
+    print(task_distribution) # para cada worker, listas de listas ex.: w1:[[tarefas a fazer pdor1], [tarefas a fazer pdor2], ...]
