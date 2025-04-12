@@ -1,3 +1,4 @@
+import logging
 class TaskManager:
     def __init__(self, rules_yaml: dict):
         self.tasks = rules_yaml.get('tasks', {})
@@ -11,3 +12,4 @@ class TaskManager:
     
     def get_rules(self, subtask: dict):
         return [self.rules.get(rule) for rule in subtask.get('rules', [])]
+    
