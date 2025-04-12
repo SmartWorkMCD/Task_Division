@@ -112,30 +112,24 @@ class TaskAssignmentSolver:
         
         # Initialize task distribution dictionary
         task_distribution = {w: [] for w in workers_info.workers}
-        
-        # Get flattened task list
-        flattened_tasks = [task for sublist in tasks for task in sublist]
-        
-        # Create a mapping of task to worker from assignment matrix
-        task_to_worker = {}
-        for i, task in enumerate(flattened_tasks):
-            worker_idx = np.argmax(assignment_matrix[i])
-            worker_name = decoded_workers[worker_idx]
-            task_to_worker[task] = worker_name
-        
+
         # Organize tasks by product for each worker
         current_task_idx = 0
         for product_idx, product_tasks in enumerate(tasks):
+
+            # Create a mapping of tasks to workers for the current product
             worker_product_tasks = {w: [] for w in workers_info.workers}
-            
+
+            # Assign tasks to workers based on the assignment matrix
             for task in product_tasks:
-                worker = task_to_worker[task]
-                worker_product_tasks[worker].append(task)
+                worker_idx = np.argmax(assignment_matrix[current_task_idx])
+                worker_name = decoded_workers[worker_idx]
+                worker_product_tasks[worker_name].append(task)
                 current_task_idx += 1
-            
+
             # Add non-empty product task lists to each worker's assignments
             for worker, worker_tasks in worker_product_tasks.items():
                 if worker_tasks:  # Only add non-empty task lists
                     task_distribution[worker].append(worker_tasks)
-        
+
         return task_distribution

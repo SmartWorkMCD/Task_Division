@@ -133,7 +133,7 @@ class TaskDivisionManager:
                 remaining = [task for task in assigned_flat if task not in completed]
                 logging.info(f"{ws} has {len(remaining)} tasks remaining.")
 
-                if len(remaining) <= 16: # tarefas a faltar antes de atribuir novas
+                if len(remaining) <= 5: # tarefas a faltar antes de atribuir novas
                     remaining_product_ids = [
                         pid for pid in self.all_tasks.keys()
                         if pid not in self.products_assigned
