@@ -47,8 +47,9 @@ class TaskDivisionManager:
         self.input_times = self.update_times(self.input_times)
         self.all_tasks = {}
         self.tasks_assigned = {}
-        self.products_assigned = []
+        self.products_assigned = {}
         self.tasks_completed = {}
+        self.products_completed = {}
         self._transform_prods_to_tasks(self.products_manager.get_products())
         self.first_run(list(self.all_tasks.values())[:5], list(self.all_tasks.keys())[:5])
 
@@ -57,8 +58,9 @@ class TaskDivisionManager:
         self.optimal_value, assignment_matrix = solver.solve()
         tsk = solver.get_assignments_list()
         self.tasks_assigned = tsk
-        self.products_assigned = list_ids
-        self.send_task(self.tasks_assigned)
+        for i in list_ids:
+            self.products_assigned[i] = self.products_manager.get_product(i)
+        self.send_task(self.tasks_assigned, self.products_assigned, self.task_manager.get_rules_per_task())
 
 
     def _transform_prods_to_tasks(self, products: dict):
@@ -112,10 +114,14 @@ class TaskDivisionManager:
             logging.error(f"Erro ao tratar mensagem de {worker_id}: {e}")
 
     
-    def send_task(self, assignment: dict):
+    def send_task(self, assignment: dict, products: dict, rules: list = None):
         try:
             for worker_id, task_list in assignment.items():
                 payload = {"tasks": task_list}
+                if worker_id =='ws2':
+                    payload["products"] = products
+                if rules:
+                    payload["rules"] = rules
                 self.mqtt_connections.send_task(worker_id, payload)
                 logging.info(f"Sent task to {worker_id}: {task_list}")
         except Exception as e:
