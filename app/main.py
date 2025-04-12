@@ -48,6 +48,11 @@ class TaskDivisionManager:
         self.all_tasks = {}
         self.tasks_assigned = {}
         self.products_assigned = {}
+        self.tasks_in_progress = {
+            "ws1": {"assigned": [], "completed": []},
+            "ws2": {"assigned": [], "completed": [], "products_assigned": [], "products_completed": []},
+            "ws3": {"assigned": [], "completed": []},
+        }
         self.tasks_completed = {}
         self.products_completed = {}
         self._transform_prods_to_tasks(self.products_manager.get_products())
@@ -61,7 +66,6 @@ class TaskDivisionManager:
         for i in list_ids:
             self.products_assigned[i] = self.products_manager.get_product(i)
         self.send_task(self.tasks_assigned, self.products_assigned, self.task_manager.get_rules_per_task())
-
 
     def _transform_prods_to_tasks(self, products: dict):
         for product_id, config in products.items():
@@ -99,21 +103,82 @@ class TaskDivisionManager:
                     times["atual"] = None
         return inp_times
     
-    def _handle_message(self, worker_id, msg):  # o suposto é receber a {"tarefa_id": tempo(segundos)}
-        try:
+    def _handle_message(self, worker_id, msg): 
+        try:  # o suposto é receber a {"tarefa_id": tempo(segundos)}, quando é um T2A tem de receber assim {"tarefa_id": tempo(segundos), "produto_id": produto_id}
             payload = json.loads(msg.payload.decode())
             logging.info(f"Received message from {worker_id}: {payload}")
             for task_id, time in payload.items():
                 if task_id in self.input_times:
                     self.input_times[task_id][worker_id]["atual"] = time
-                    logging.info(f"Updated input times for {task_id} on {worker_id}: {time}")
                     self.input_times = self.update_times(self.input_times)
+                if worker_id in self.tasks_in_progress:
+                    self.tasks_in_progress[worker_id]["completed"].append(task_id)
+                    if worker_id == 'ws2' and task_id == "T2A":
+                        pid = payload["produto_id"]
+                        self.tasks_in_progress[worker_id]["products_completed"].append(pid)
+                        logging.info(f"Marked product {pid} as completed by {worker_id}")
+                    logging.info(f"Marked {task_id} as completed by {worker_id}")
+                    print('_handle_message', self.tasks_in_progress)
                 else:
                     logging.warning(f"Received unknown task ID {task_id} from {worker_id}")
+            self.check_and_assign_new_tasks()
         except Exception as e:
             logging.error(f"Erro ao tratar mensagem de {worker_id}: {e}")
 
-    
+    def check_and_assign_new_tasks(self):
+        try:
+            for ws, progress in self.tasks_in_progress.items():
+                assigned_flat = [t for sublist in progress["assigned"] for t in sublist]
+                completed = progress["completed"]
+                remaining = [task for task in assigned_flat if task not in completed]
+                logging.info(f"{ws} has {len(remaining)} tasks remaining.")
+
+                if len(remaining) <= 16: # tarefas a faltar antes de atribuir novas
+                    remaining_product_ids = [
+                        pid for pid in self.all_tasks.keys()
+                        if pid not in self.products_assigned
+                    ]
+                    if not remaining_product_ids:
+                        logging.info(f"No more products to assign.")
+                        continue
+                    # Seleciona próximos 5 produtos
+                    new_product_ids = remaining_product_ids[:5]
+                    new_tasks = [self.all_tasks[pid] for pid in new_product_ids]
+                    # Resolve
+                    solver = TaskAssignmentSolver(self.input_times, new_tasks)
+                    self.optimal_value, assignment_matrix = solver.solve()
+                    new_assignments = solver.get_assignments_list()
+                    for pid in new_product_ids:
+                        self.products_assigned[pid] = self.products_manager.get_product(pid)
+
+                    temp = ['ws1', 'ws2', 'ws3']
+                    try:
+                        for t in temp:
+                            for task_id in self.tasks_in_progress[t]["completed"]:
+                                for i, task_list in enumerate(self.tasks_in_progress[t]["assigned"]):
+                                    if task_id in task_list:
+                                        self.tasks_in_progress[t]["assigned"][i].remove(task_id)
+                                        logging.info(f"Removed completed task {task_id} from assigned tasks.")
+                                        break
+                                if t == 'ws2':
+                                    if len(self.tasks_in_progress[t]["products_completed"]) > 0:
+                                        for pid in self.tasks_in_progress[t]["products_completed"]:
+                                            self.products_completed[pid] = self.products_manager.get_product(pid)
+                                            self.tasks_in_progress[t]["products_completed"].remove(pid)
+                                            logging.info(f"Product {pid} marked as completed.")
+                                self.tasks_in_progress[t]["completed"].remove(task_id)
+                                if t not in self.tasks_completed:
+                                    self.tasks_completed[t] = []
+                                self.tasks_completed[t].append(task_id)
+                                logging.info(f"Task {task_id} marked as completed.")
+                    except Exception as e:
+                        logging.error(f"Error removing completed tasks: {e}")
+                    self.send_task(new_assignments, self.products_assigned, self.task_manager.get_rules_per_task())
+                    break
+            print('check_and_assign_new_tasks', self.tasks_in_progress)
+        except Exception as e:
+            logging.error(f"Error checking and assigning new tasks: {e}")
+
     def send_task(self, assignment: dict, products: dict, rules: list = None):
         try:
             for worker_id, task_list in assignment.items():
@@ -123,6 +188,9 @@ class TaskDivisionManager:
                 if rules:
                     payload["rules"] = rules
                 self.mqtt_connections.send_task(worker_id, payload)
+                self.tasks_in_progress[worker_id]["assigned"].extend(task_list)
+                if worker_id == 'ws2':
+                    self.tasks_in_progress[worker_id]["products_assigned"].extend(products.keys())
                 logging.info(f"Sent task to {worker_id}: {task_list}")
         except Exception as e:
             logging.error(f"Error sending task to {worker_id}: {e}")
