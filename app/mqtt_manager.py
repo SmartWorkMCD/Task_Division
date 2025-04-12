@@ -6,8 +6,9 @@ TOPIC_PUBLISH_TASKS = "v1/devices/me/attributes"
 TOPIC_SUBSCRIBE_BRAIN = "v1/devices/me/telemetry"
 
 class MQTTSystem:
-    def __init__(self, connections_config: dict):
+    def __init__(self, connections_config: dict, message_handler=None):
         self.connections_config = connections_config
+        self.message_handler = message_handler
         self.connections = {}
         self._setup_connections()
         if not self.connect_all():
@@ -20,7 +21,8 @@ class MQTTSystem:
     def _setup_connections(self):
         try:
             for broker_id, conn in self.connections_config['server'].items():
-                self.connections[broker_id] = MQTTConnection(broker_id, conn['host'], conn['port'], conn['token'])
+                connection = MQTTConnection(broker_id, conn['host'], conn['port'], conn['token'], self.message_handler)
+                self.connections[broker_id] = connection
             return self.connections
         except Exception as e:
             logging.error(f"Error setting up connections: {e}")

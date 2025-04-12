@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 import logging
-
+import json
 from yaml_loader import YamlLoader
 from product_manager import ProductManager
 from task_manager import TaskManager
@@ -25,26 +25,28 @@ REFERENCE_VALUES = {
 class TaskDivisionManager:
     def __init__(self, connections_file: str, products_file: str, rules_file: str):
         self.connections_config = YamlLoader.load_yaml(connections_file)
-        self.mqtt_connections = MQTTSystem(self.connections_config)
+        self.mqtt_connections = MQTTSystem(self.connections_config, self._handle_message)
         self.products_manager = ProductManager(YamlLoader.load_yaml(products_file))
         self.task_manager = TaskManager(YamlLoader.load_yaml(rules_file))
         self.possible_server_tasks = {
-            'W1': ['T1A', 'T1B', 'T1C', 'T1D', 'T1E'],
-            'W2': ['T1C', 'T1D', 'T1E', 'T2'],
-            'W3': ['T3A', 'T3B', 'T3C'],
+            'ws1': ['T1A', 'T1B', 'T1C', 'T1D', 'T1E'],
+            'ws2': ['T1C', 'T1D', 'T1E', 'T2'],
+            'ws3': ['T3A', 'T3B', 'T3C'],
+        }
+        self.input_times = { # in the first inicialization, the EWMA(lag) is None, and the atual is the reference value
+        "T1A": {"ws1": {"EWMA(lag)": None, "atual": None}},
+        "T1B": {"ws1": {"EWMA(lag)": None, "atual": None}},
+        "T1C": {"ws1": {"EWMA(lag)": None, "atual": None}, "ws2": {"EWMA(lag)": None, "atual": None}},
+        "T1D": {"ws1": {"EWMA(lag)": None, "atual": None}, "ws2": {"EWMA(lag)": None, "atual": None}},
+        "T1E": {"ws1": {"EWMA(lag)": None, "atual": None}, "ws2": {"EWMA(lag)": None, "atual": None}},
+        "T2A": {"ws2": {"EWMA(lag)": None, "atual": None}},
+        "T3A": {"ws3": {"EWMA(lag)": None, "atual": None}},
+        "T3B": {"ws3": {"EWMA(lag)": None, "atual": None}},
+        "T3C": {"ws3": {"EWMA(lag)": None, "atual": None}}
         }
         self.all_tasks = {}
-        self.input_times = { # in the first inicialization, the EWMA(lag) is None, and the atual is the reference value
-        "T1A": {"W1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.A']}},
-        "T1B": {"W1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.B']}},
-        "T1C": {"W1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}, "W2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}},
-        "T1D": {"W1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}, "W2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}},
-        "T1E": {"W1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.E']}, "W2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.E']}},
-        "T2": {"W2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T2']}},
-        "T3A": {"W3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.A']}},
-        "T3B": {"W3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.B']}},
-        "T3C": {"W3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.C']}}
-        }
+        self.tasks_assigned = {}
+        self.tasks_completed = {}
         self._transform_prods_to_tasks(self.products_manager.get_products())
 
     def _transform_prods_to_tasks(self, products: dict):
@@ -96,6 +98,21 @@ class TaskDivisionManager:
                     times["atual"] = None
         return inp_times
 
+    def _handle_message(self, worker_id, msg):  # o suposto é receber a {"tarefa_id": tempo(segundos)}
+        try:
+            payload = json.loads(msg.payload.decode())
+            logging.info(f"Received message from {worker_id}: {payload}")
+            # Atualiza os tempos de execução, temos o worker_id, a tarefa_id e o tempo
+            for task_id, time in payload.items():
+                if task_id in self.input_times:
+                    # Atualiza o tempo de execução
+                    self.input_times[task_id][worker_id]["atual"] = time
+                    logging.info(f"Updated input times for {task_id} on {worker_id}: {time}")
+                    print(self.input_times)
+                else:
+                    logging.warning(f"Received unknown task ID {task_id} from {worker_id}")
+        except Exception as e:
+            logging.error(f"Erro ao tratar mensagem de {worker_id}: {e}")
     
 
 
