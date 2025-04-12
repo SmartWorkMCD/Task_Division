@@ -33,17 +33,18 @@ class TaskDivisionManager:
             'ws2': ['T1C', 'T1D', 'T1E', 'T2'],
             'ws3': ['T3A', 'T3B', 'T3C'],
         }
-        self.input_times = { # in the first inicialization, the EWMA(lag) is None, and the atual is the reference value
-        "T1A": {"ws1": {"EWMA(lag)": None, "atual": None}},
-        "T1B": {"ws1": {"EWMA(lag)": None, "atual": None}},
-        "T1C": {"ws1": {"EWMA(lag)": None, "atual": None}, "ws2": {"EWMA(lag)": None, "atual": None}},
-        "T1D": {"ws1": {"EWMA(lag)": None, "atual": None}, "ws2": {"EWMA(lag)": None, "atual": None}},
-        "T1E": {"ws1": {"EWMA(lag)": None, "atual": None}, "ws2": {"EWMA(lag)": None, "atual": None}},
-        "T2A": {"ws2": {"EWMA(lag)": None, "atual": None}},
-        "T3A": {"ws3": {"EWMA(lag)": None, "atual": None}},
-        "T3B": {"ws3": {"EWMA(lag)": None, "atual": None}},
-        "T3C": {"ws3": {"EWMA(lag)": None, "atual": None}}
+        self.input_times = { # in the first initialization, the EWMA(lag) is None, and the atual is the reference value
+            "T1A": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.A']}},
+            "T1B": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.B']}},
+            "T1C": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}},
+            "T1D": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}},
+            "T1E": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.E']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.E']}},
+            "T2A": {"ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T2']}},
+            "T3A": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.A']}},
+            "T3B": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.B']}},
+            "T3C": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.C']}}
         }
+        self.input_times = self.update_times(self.input_times)
         self.all_tasks = {}
         self.tasks_assigned = {}
         self.tasks_completed = {}
@@ -81,7 +82,7 @@ class TaskDivisionManager:
         
         return server_assignments
     
-    def update_times(inp_times, weight = 0.2):
+    def update_times(self, inp_times, weight = 0.2):
         """update inpt_times with the EWMA(lag) value"""
         for task, workers in inp_times.items():
             for worker, times in workers.items():
@@ -97,17 +98,16 @@ class TaskDivisionManager:
                     times["EWMA(lag)"] = (weight * times["atual"]) + ((1-weight) * times["EWMA(lag)"])
                     times["atual"] = None
         return inp_times
-
+    
     def _handle_message(self, worker_id, msg):  # o suposto é receber a {"tarefa_id": tempo(segundos)}
         try:
             payload = json.loads(msg.payload.decode())
             logging.info(f"Received message from {worker_id}: {payload}")
-            # Atualiza os tempos de execução, temos o worker_id, a tarefa_id e o tempo
             for task_id, time in payload.items():
                 if task_id in self.input_times:
-                    # Atualiza o tempo de execução
                     self.input_times[task_id][worker_id]["atual"] = time
                     logging.info(f"Updated input times for {task_id} on {worker_id}: {time}")
+                    self.input_times = self.update_times(self.input_times)
                     print(self.input_times)
                 else:
                     logging.warning(f"Received unknown task ID {task_id} from {worker_id}")
