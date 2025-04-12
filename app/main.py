@@ -11,12 +11,12 @@ from task_assigment_alg import TaskAssignmentSolver
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 REFERENCE_VALUES = {
-    'T1.A': 10,
-    'T1.B': 10,
+    'T1.A': 20,
+    'T1.B': 20,
     'T1.C': 10,
     'T1.D': 10,
     'T1.E': 10,
-    'T2': 30,
+    'T2': 10,
     'T3.A': 6,
     'T3.B': 7,
     'T3.C': 5,
@@ -25,7 +25,7 @@ REFERENCE_VALUES = {
 class TaskDivisionManager:
     def __init__(self, connections_file: str, products_file: str, rules_file: str):
         self.connections_config = YamlLoader.load_yaml(connections_file)
-        self.mqtt_connections = MQTTSystem(self.connections_config, self._handle_message)
+        self.mqtt_connections = MQTTSystem(self.connections_config, self._handle_message) 
         self.products_manager = ProductManager(YamlLoader.load_yaml(products_file))
         self.task_manager = TaskManager(YamlLoader.load_yaml(rules_file))
         self.possible_server_tasks = {
@@ -47,8 +47,19 @@ class TaskDivisionManager:
         self.input_times = self.update_times(self.input_times)
         self.all_tasks = {}
         self.tasks_assigned = {}
+        self.products_assigned = []
         self.tasks_completed = {}
         self._transform_prods_to_tasks(self.products_manager.get_products())
+        self.first_run(list(self.all_tasks.values())[:5], list(self.all_tasks.keys())[:5])
+
+    def first_run(self, first5, list_ids):
+        solver = TaskAssignmentSolver(self.input_times, first5)
+        self.optimal_value, assignment_matrix = solver.solve()
+        tsk = solver.get_assignments_list()
+        self.tasks_assigned = tsk
+        self.products_assigned = list_ids
+        self.send_task(self.tasks_assigned)
+
 
     def _transform_prods_to_tasks(self, products: dict):
         for product_id, config in products.items():
@@ -62,25 +73,12 @@ class TaskDivisionManager:
             task_id = self.products_manager.get_task_by_color(color)
             if task_id:
                 subtasks.extend([task_id] * quantity)
+            # No fim adiciona sempre a tarefa T2, T3A, T3B e T3C
+        subtasks.extend(['T2A'] * 1)
+        subtasks.extend(['T3A'] * 1)
+        subtasks.extend(['T3B'] * 1)
+        subtasks.extend(['T3C'] * 1)
         return subtasks
-    
-    def divide_tasks_among_servers(self, subtasks: list):
-        """
-        Divide as subtarefas pelos servidores com base nas tasks que eles podem executar.
-        """
-        server_assignments = {server: [] for server in self.possible_server_tasks}
-
-        for subtask_id, quantity in subtasks:
-            assigned = False
-            for server, task_list in self.possible_server_tasks.items():
-                if subtask_id in task_list:
-                    server_assignments[server].append((subtask_id, quantity))
-                    assigned = True
-                    break
-            if not assigned:
-                logging.warning(f"Subtask {subtask_id} not assigned to any server.")
-        
-        return server_assignments
     
     def update_times(self, inp_times, weight = 0.2):
         """update inpt_times with the EWMA(lag) value"""
@@ -108,11 +106,20 @@ class TaskDivisionManager:
                     self.input_times[task_id][worker_id]["atual"] = time
                     logging.info(f"Updated input times for {task_id} on {worker_id}: {time}")
                     self.input_times = self.update_times(self.input_times)
-                    print(self.input_times)
                 else:
                     logging.warning(f"Received unknown task ID {task_id} from {worker_id}")
         except Exception as e:
             logging.error(f"Erro ao tratar mensagem de {worker_id}: {e}")
+
+    
+    def send_task(self, assignment: dict):
+        try:
+            for worker_id, task_list in assignment.items():
+                payload = {"tasks": task_list}
+                self.mqtt_connections.send_task(worker_id, payload)
+                logging.info(f"Sent task to {worker_id}: {task_list}")
+        except Exception as e:
+            logging.error(f"Error sending task to {worker_id}: {e}")
     
 
 

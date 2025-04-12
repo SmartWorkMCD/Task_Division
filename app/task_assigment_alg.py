@@ -89,24 +89,53 @@ class TaskAssignmentSolver:
         self.assignment_matrix = np.array([[pulp.value(x[i][j]) for j in range(num_cols)] for i in range(num_rows)], dtype=int)
         return self.optimal_value, self.assignment_matrix
 
-    def get_assignment_dict(self):
-        """Devolve a distribuição de tarefas por trabalhador."""
-        if self.assignment_matrix is None:
-            raise ValueError("You need to run `.solve()` first.")
-
-        decoded_workers = {i: w for w, i in self.workers_info.encoded_workers.items()}
-        task_distribution = {w: [] for w in self.workers_info.workers}
-        last_task_index = 0
-
-        for product_tasks in self.tasks:
-            tasks_per_product = {w: [] for w in self.workers_info.workers}
+    def get_assignments_list(self):
+        """
+        Print the task assignments for each worker based on the assignment matrix.
+        
+        Args:
+            assignment_matrix (np.ndarray, optional): The binary matrix indicating task assignments.
+                If None, uses self.assignment_matrix
+            workers_info (WorkersInfo, optional): The WorkersInfo instance containing worker information.
+                If None, uses self.workers_info
+            tasks (list, optional): The list of tasks. If None, uses self.tasks
+                
+        Returns:
+            task_distribution (dict): A dictionary mapping each worker to their assigned tasks.
+        """
+        # Use class attributes if parameters not provided
+        assignment_matrix = self.assignment_matrix
+        workers_info = self.workers_info
+        tasks = self.tasks
+            
+        decoded_workers = {i: w for w, i in workers_info.encoded_workers.items()}
+        
+        # Initialize task distribution dictionary
+        task_distribution = {w: [] for w in workers_info.workers}
+        
+        # Get flattened task list
+        flattened_tasks = [task for sublist in tasks for task in sublist]
+        
+        # Create a mapping of task to worker from assignment matrix
+        task_to_worker = {}
+        for i, task in enumerate(flattened_tasks):
+            worker_idx = np.argmax(assignment_matrix[i])
+            worker_name = decoded_workers[worker_idx]
+            task_to_worker[task] = worker_name
+        
+        # Organize tasks by product for each worker
+        current_task_idx = 0
+        for product_idx, product_tasks in enumerate(tasks):
+            worker_product_tasks = {w: [] for w in workers_info.workers}
+            
             for task in product_tasks:
-                j = np.argmax(self.assignment_matrix[last_task_index])
-                worker_name = decoded_workers[j]
-                tasks_per_product[worker_name].append(task)
-                last_task_index += 1
-
-            for worker, tasks in tasks_per_product.items():
-                task_distribution[worker].append(tasks)
-
+                worker = task_to_worker[task]
+                worker_product_tasks[worker].append(task)
+                current_task_idx += 1
+            
+            # Add non-empty product task lists to each worker's assignments
+            for worker, worker_tasks in worker_product_tasks.items():
+                if worker_tasks:  # Only add non-empty task lists
+                    task_distribution[worker].append(worker_tasks)
+        
         return task_distribution

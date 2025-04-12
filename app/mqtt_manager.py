@@ -1,3 +1,4 @@
+import json
 import paho.mqtt.client as mqtt
 import logging
 from mqtt_connection import MQTTConnection
@@ -54,3 +55,15 @@ class MQTTSystem:
         except Exception as e:
             logging.error(f"Error subscribing to topics: {e}")
             return False
+        
+    def send_task(self, worker_id, assignment : dict):
+        try:
+            payload = json.dumps(assignment)
+            for id, conn in self.connections.items():
+                if id == worker_id:
+                    conn.publish(TOPIC_PUBLISH_TASKS, payload)
+                    logging.info(f"Sent task to {worker_id}")
+            
+        except Exception as e:
+            logging.error(f"Error sending task to {worker_id}: {e}")
+            
