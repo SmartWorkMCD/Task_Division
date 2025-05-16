@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class MQTTConnection:
-    def __init__(self, broker_id: str, host: str, port: int, token: str):
+    def __init__(self, broker_id: str, host: str, port: int, token: str, on_message_callback=None):
         self.broker_id = broker_id
         self.client = mqtt.Client(client_id=f"producer_{broker_id}")
         self.client.username_pw_set(token)
@@ -17,7 +17,8 @@ class MQTTConnection:
         self.client.on_connect = self.on_connect
         self.client.on_publish = self.on_publish
         self.client.on_subscribe = self.on_subscribe
-        self.client.on_message = self.on_message
+        self.on_message_callback = on_message_callback
+        self.client.on_message = self._internal_on_message
         self.subscribed_topics = [] 
 
     def on_connect(self, client, userdata, flags, rc):
@@ -32,11 +33,12 @@ class MQTTConnection:
     
     def on_subscribe(self, client, userdata, mid, granted_qos):
         logging.info(f"Subscribed to broker {self.broker_id} with ID {mid} and QoS {granted_qos}")
-        return False
     
-    def on_message(self, client, userdata, msg):
-        logging.info(f"Message received from broker {self.broker_id} on topic {msg.topic}: {msg.payload.decode()}")
-        return False
+    def _internal_on_message(self, client, userdata, msg):
+        if self.on_message_callback:
+            self.on_message_callback(self.broker_id, msg)
+        else:
+            logging.warning(f"No callback set for message from {self.broker_id}")
 
     def connect(self):
         try:
@@ -65,8 +67,8 @@ class MQTTConnection:
         
     def subscribe(self, topic: str):
         try:
-            result = self.client.subscribe(topic)
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+            result, mid = self.client.subscribe(topic)
+            if result == mqtt.MQTT_ERR_SUCCESS:
                 logging.info(f"Subscribed to topic {topic}")
                 self.subscribed_topics.append(topic)
                 return True

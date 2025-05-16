@@ -15,27 +15,27 @@ tasks:
   Task1:
     description: "Logistics & Candy Preparation (Wrapping Station)"
     subtasks:
-      Task1.A:
+      T1A:
         task_name: "Wrap Yellow Candies"
         task_description: "Ensure yellow candies are properly wrapped."
         rules:
           - rule1
-      Task1.B:
+      T1B:
         task_name: "Wrap Blue Candies"
         task_description: "Ensure blue candies are properly wrapped."
         rules:
           - rule1
-      Task1.C:
+      T1C:
         task_name: "Wrap Green Candies"
         task_description: "Ensure green candies are properly wrapped."
         rules:
           - rule1
-      Task1.D:
+      T1D:
         task_name: "Wrap Orange Candies"
         task_description: "Ensure orange candies are properly wrapped."
         rules:
           - rule1
-      Task1.E:
+      T1E:
         task_name: "Wrap Red Candies"
         task_description: "Ensure red candies are properly wrapped."
         rules:
@@ -46,7 +46,7 @@ tasks:
     dependencies:
       - Task1
     subtasks:
-      Task2.A:
+      T2:
         task_name: "Assemble Candy Boxes"
         task_description: "Assemble candies into boxes according to product specifications."
         rules:
@@ -61,17 +61,17 @@ tasks:
     dependencies:
       - Task2
     subtasks:
-      Task3.A:
+      T3A:
         task_name: "Insert Cardboard"
         task_description: "Place protective cardboard inside the box."
         rules:
           - rule1
-      Task3.B:
+      T3B:
         task_name: "Apply Adhesive"
         task_description: "Seal the box securely with adhesive."
         rules:
           - rule2
-      Task3.C:
+      T3C:
         task_name: "Decorative Finishing"
         task_description: "Add final decorative touches to the packaging."
         rules:
