@@ -1,0 +1,79 @@
+rules:
+  rule1:
+    name: "Rule 1"
+    description: "Ensure all candies are properly wrapped."
+    if: "CandiesWrapped == True"
+    do: "ProceedToNextStep()"
+
+  rule2:
+    name: "Rule 2"
+    description: "Verify candy combination matches product specifications."
+    if: "CombinationValid == True"
+    do: "ProceedToPackaging()"
+
+tasks:
+  Task1:
+    description: "Logistics & Candy Preparation (Wrapping Station)"
+    subtasks:
+      T1A:
+        task_name: "Wrap Yellow Candies"
+        task_description: "Ensure yellow candies are properly wrapped."
+        rules:
+          - rule1
+      T1B:
+        task_name: "Wrap Blue Candies"
+        task_description: "Ensure blue candies are properly wrapped."
+        rules:
+          - rule1
+      T1C:
+        task_name: "Wrap Green Candies"
+        task_description: "Ensure green candies are properly wrapped."
+        rules:
+          - rule1
+      T1D:
+        task_name: "Wrap Orange Candies"
+        task_description: "Ensure orange candies are properly wrapped."
+        rules:
+          - rule1
+      T1E:
+        task_name: "Wrap Red Candies"
+        task_description: "Ensure red candies are properly wrapped."
+        rules:
+          - rule1
+
+  Task2:
+    description: "Production Line (Combination Assembly)"
+    dependencies:
+      - Task1
+    subtasks:
+      T2:
+        task_name: "Assemble Candy Boxes"
+        task_description: "Assemble candies into boxes according to product specifications."
+        rules:
+          - rule2 
+        products_file: 
+          - "products.yaml"
+        quality_check:
+          - object_detection
+
+  Task3:
+    description: "Packaging & Finishing"
+    dependencies:
+      - Task2
+    subtasks:
+      T3A:
+        task_name: "Insert Cardboard"
+        task_description: "Place protective cardboard inside the box."
+        rules:
+          - rule1
+      T3B:
+        task_name: "Apply Adhesive"
+        task_description: "Seal the box securely with adhesive."
+        rules:
+          - rule2
+      T3C:
+        task_name: "Decorative Finishing"
+        task_description: "Add final decorative touches to the packaging."
+        rules:
+          - rule1
+          - rule2
