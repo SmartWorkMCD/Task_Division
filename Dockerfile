@@ -15,4 +15,4 @@ COPY ./app/ .
 
 EXPOSE 3275
 
-CMD ["python3","app/main.py"]
+CMD [ "cd app && python3 main.py" ]
