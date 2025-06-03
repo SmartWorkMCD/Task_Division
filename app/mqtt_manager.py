@@ -3,8 +3,8 @@ import paho.mqtt.client as mqtt
 import logging
 from mqtt_connection import MQTTConnection
 
-TOPIC_PUBLISH_TASKS = "v1/devices/me/attributes"
-TOPIC_SUBSCRIBE_BRAIN = "v1/devices/me/telemetry"
+TOPIC_PUBLISH_TASKS = "tasks/publish"
+TOPIC_SUBSCRIBE_BRAIN = "tasks/subscribe/brain"
 
 class MQTTSystem:
     def __init__(self, connections_config: dict, message_handler=None):

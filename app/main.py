@@ -15,7 +15,6 @@ REFERENCE_VALUES = {
     'T1.B': 20,
     'T1.C': 10,
     'T1.D': 10,
-    'T1.E': 10,
     'T2': 10,
     'T3.A': 6,
     'T3.B': 7,
@@ -23,14 +22,16 @@ REFERENCE_VALUES = {
 }
 
 class TaskDivisionManager:
-    def __init__(self, connections_file: str, products_file: str, rules_file: str):
+    def __init__(self, connections_file: str, products_file: str, rules_file: str, number_remaining: int = 2, number_next_products: int = 3):
+        self.number_next_products = number_next_products
+        self.tasks_remaining = number_remaining
         self.connections_config = YamlLoader.load_yaml(connections_file)
         self.mqtt_connections = MQTTSystem(self.connections_config, self._handle_message) 
         self.products_manager = ProductManager(YamlLoader.load_yaml(products_file))
         self.task_manager = TaskManager(YamlLoader.load_yaml(rules_file))
         self.possible_server_tasks = {
-            'ws1': ['T1A', 'T1B', 'T1C', 'T1D', 'T1E'],
-            'ws2': ['T1C', 'T1D', 'T1E', 'T2'],
+            'ws1': ['T1A', 'T1B', 'T1C', 'T1D'],
+            'ws2': ['T1C', 'T1D', 'T2'],
             'ws3': ['T3A', 'T3B', 'T3C'],
         }
         self.input_times = { # in the first initialization, the EWMA(lag) is None, and the atual is the reference value
@@ -38,7 +39,6 @@ class TaskDivisionManager:
             "T1B": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.B']}},
             "T1C": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}},
             "T1D": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}},
-            "T1E": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.E']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.E']}},
             "T2A": {"ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T2']}},
             "T3A": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.A']}},
             "T3B": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.B']}},
@@ -56,7 +56,7 @@ class TaskDivisionManager:
         self.tasks_completed = {}
         self.products_completed = {}
         self._transform_prods_to_tasks(self.products_manager.get_products())
-        self.first_run(list(self.all_tasks.values())[:5], list(self.all_tasks.keys())[:5])
+        self.first_run(list(self.all_tasks.values())[:self.number_next_products], list(self.all_tasks.keys())[:self.number_next_products])
 
     def first_run(self, first5, list_ids):
         solver = TaskAssignmentSolver(self.input_times, first5)
@@ -65,7 +65,7 @@ class TaskDivisionManager:
         self.tasks_assigned = tsk
         for i in list_ids:
             self.products_assigned[i] = self.products_manager.get_product(i)
-        self.send_task(self.tasks_assigned, self.products_assigned, self.task_manager.get_rules_per_task())
+        self.send_task(self.tasks_assigned, self.products_assigned)
 
     def _transform_prods_to_tasks(self, products: dict):
         for product_id, config in products.items():
@@ -133,7 +133,7 @@ class TaskDivisionManager:
                 remaining = [task for task in assigned_flat if task not in completed]
                 logging.info(f"{ws} has {len(remaining)} tasks remaining.")
 
-                if len(remaining) <= 5: # tarefas a faltar antes de atribuir novas
+                if len(remaining) <= self.tasks_remaining: # tarefas a faltar antes de atribuir novas
                     remaining_product_ids = [
                         pid for pid in self.all_tasks.keys()
                         if pid not in self.products_assigned
@@ -142,7 +142,7 @@ class TaskDivisionManager:
                         logging.info(f"No more products to assign.")
                         continue
                     # Seleciona próximos 5 produtos
-                    new_product_ids = remaining_product_ids[:5]
+                    new_product_ids = remaining_product_ids[:self.number_next_products]
                     new_tasks = [self.all_tasks[pid] for pid in new_product_ids]
                     # Resolve
                     solver = TaskAssignmentSolver(self.input_times, new_tasks)
@@ -173,20 +173,18 @@ class TaskDivisionManager:
                                 logging.info(f"Task {task_id} marked as completed.")
                     except Exception as e:
                         logging.error(f"Error removing completed tasks: {e}")
-                    self.send_task(new_assignments, self.products_assigned, self.task_manager.get_rules_per_task())
+                    self.send_task(new_assignments, self.products_assigned)
                     break
             print('check_and_assign_new_tasks', self.tasks_in_progress)
         except Exception as e:
             logging.error(f"Error checking and assigning new tasks: {e}")
 
-    def send_task(self, assignment: dict, products: dict, rules: list = None):
+    def send_task(self, assignment: dict, products: dict):
         try:
             for worker_id, task_list in assignment.items():
                 payload = {"tasks": task_list}
                 if worker_id =='ws2':
                     payload["products"] = products
-                if rules:
-                    payload["rules"] = rules
                 self.mqtt_connections.send_task(worker_id, payload)
                 self.tasks_in_progress[worker_id]["assigned"].extend(task_list)
                 if worker_id == 'ws2':

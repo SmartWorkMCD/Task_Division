@@ -1,0 +1,5 @@
+Mudar a lista de listas de tarefas para um dicionário key-value, key produto e value lista de tarefas, alem disso a aprte da contagem de produtos esta mal feita
+{'ws1': {'assigned': [['T1A', 'T1A', 'T1B'], ['T1A', 'T1B', 'T1B'], ['T1A', 'T1A', 'T1A', 'T1B', 'T1B'], ['T1A', 'T1A', 'T1B'], ['T1A', 'T1B', 'T1B', 'T1B']], 'completed': ['T1B']} - ws1 has 9 tasks remaining.
+Nao preciso de enviar regras, nem produtos config
+weight = 0.2 tem que ser passado atraves do docker
+Docker

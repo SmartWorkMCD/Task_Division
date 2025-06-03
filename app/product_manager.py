@@ -13,8 +13,7 @@ class ProductManager:
             'Yellow': 'T1A',
             'Blue': 'T1B',
             'Green': 'T1C',
-            'Orange': 'T1D',
-            'Red': 'T1E'
+            'Red': 'T1D',
         }
         return color_to_task.get(color)
     

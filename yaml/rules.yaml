@@ -31,11 +31,6 @@ tasks:
         rules:
           - rule1
       T1D:
-        task_name: "Wrap Orange Candies"
-        task_description: "Ensure orange candies are properly wrapped."
-        rules:
-          - rule1
-      T1E:
         task_name: "Wrap Red Candies"
         task_description: "Ensure red candies are properly wrapped."
         rules:
