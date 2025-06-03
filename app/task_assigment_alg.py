@@ -131,7 +131,6 @@ class TaskAssignmentSolver:
 
             # Add non-empty product task lists to each worker's assignments
             for worker, worker_tasks in worker_product_tasks.items():
-                if worker_tasks:  # Only add if there are tasks for this worker
-                    task_distribution[worker][product_id] = worker_tasks
+                task_distribution[worker][product_id] = worker_tasks
 
         return task_distribution
