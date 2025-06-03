@@ -129,7 +129,7 @@ class TaskAssignmentSolver:
 
             # Add non-empty product task lists to each worker's assignments
             for worker, worker_tasks in worker_product_tasks.items():
-                if worker_tasks:  # Only add non-empty task lists
-                    task_distribution[worker].append(worker_tasks)
+                task_distribution[worker].append(worker_tasks)
+
 
         return task_distribution
