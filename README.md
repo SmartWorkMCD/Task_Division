@@ -24,8 +24,8 @@ To run the app locally, follow these steps:
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/SmartWorkMCD/Hand_Tracking.git
-    cd Hand_Tracking
+    git clone https://github.com/SmartWorkMCD/Task_Division.git
+    cd Task_Division
     ```
 
 2. **Create a virtual environment and activate it**:
@@ -40,14 +40,14 @@ To run the app locally, follow these steps:
     pip install -r requirements.txt
     ```
 
-4. **Run Neighbooring Components (The module migth require another module to be runnning)**
+4. **RunTask Division Alg (The module migth require another module to be runnning)**
     ```sh
     docker compose up
     ```
 
 5. **Run the app**:
     ```sh
-    python3 app/main.py
+    cd app && python3 main.py
     ```
 
 ## Running the Tests

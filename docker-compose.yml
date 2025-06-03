@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  task_division:
+    image: ghcr.io/smartworkmcd/taskdivision:latest
+    container_name: taskdevision
+    restart: unless-stopped
+    environment:
+      - number_remaining_before_assign: 2
+        number_next_products_to_assign_tasks: 3
+        EWMA_weight: 0.2
+    networks:
+      custom_net:
+
+networks:
+  custom_net:
+    driver: bridge
+    ipam:
+      config:

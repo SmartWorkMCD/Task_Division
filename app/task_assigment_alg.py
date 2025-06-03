@@ -101,7 +101,8 @@ class TaskAssignmentSolver:
             tasks (list, optional): The list of tasks. If None, uses self.tasks
                 
         Returns:
-            task_distribution (dict): A dictionary mapping each worker to their assigned tasks.
+            task_distribution (dict): A dictionary mapping each worker to a dictionary of 
+            product IDs and their associated task lists.
         """
         # Use class attributes if parameters not provided
         assignment_matrix = self.assignment_matrix
@@ -110,13 +111,14 @@ class TaskAssignmentSolver:
             
         decoded_workers = {i: w for w, i in workers_info.encoded_workers.items()}
         
-        # Initialize task distribution dictionary
-        task_distribution = {w: [] for w in workers_info.workers}
+        # Initialize task distribution dictionary with nested product dictionaries
+        task_distribution = {w: {} for w in workers_info.workers}
 
         # Organize tasks by product for each worker
         current_task_idx = 0
         for product_idx, product_tasks in enumerate(tasks):
-
+            product_id = f"product_{product_idx}"  # Will be replaced with actual product ID in main.py
+            
             # Create a mapping of tasks to workers for the current product
             worker_product_tasks = {w: [] for w in workers_info.workers}
 
@@ -129,6 +131,6 @@ class TaskAssignmentSolver:
 
             # Add non-empty product task lists to each worker's assignments
             for worker, worker_tasks in worker_product_tasks.items():
-                task_distribution[worker].append(worker_tasks)
+                task_distribution[worker][product_id] = worker_tasks
 
         return task_distribution

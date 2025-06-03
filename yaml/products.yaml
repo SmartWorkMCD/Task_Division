@@ -2,23 +2,23 @@ produtos:
   produtoA:
     name: "Produto A"
     description: "Standard candy box."
-    config: { Yellow: 2, Blue: 1, Green: 3, Orange: 1 }
+    config: { Yellow: 2, Blue: 1, Green: 3, Red: 1 }
   produtoB:
     name: "Produto B"
     description: "A different mix of candies."
-    config: { Yellow: 1, Blue: 2, Green: 4, Orange: 2 }
+    config: { Yellow: 1, Blue: 2, Green: 4, Red: 2 }
   produtoC:
     name: "Produto C"
     description: "Another variation of candy mix."
-    config: { Yellow: 3, Blue: 2, Green: 1, Orange: 3 }
+    config: { Yellow: 3, Blue: 2, Green: 1, Red: 3 }
   produtoD:
     name: "Produto D"
     description: "Includes a special red candy addition."
-    config: { Yellow: 2, Blue: 1, Green: 3, Red: 4, Orange: 2 }
+    config: { Yellow: 2, Blue: 1, Green: 3, Red: 4 }
   produtoE:
     name: "Produto E"
     description: "A unique blend of candies."
-    config: { Yellow: 1, Blue: 3, Green: 2, Red: 1, Orange: 1 }
+    config: { Yellow: 1, Blue: 3, Green: 2, Red: 1}
   produtoF:
     name: "Produto F"
     description: "A special edition candy box."

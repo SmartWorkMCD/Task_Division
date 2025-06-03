@@ -2,11 +2,17 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./yaml/ .
+COPY ./app/ .
 
-EXPOSE 8000
+EXPOSE 3275
 
-CMD ["python3","app/main.py"]
+CMD [ "cd app && python3 main.py" ]
