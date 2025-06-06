@@ -273,7 +273,7 @@ class TaskDivisionManager:
 
 
 if __name__ == "__main__":
-    producer_system = TaskDivisionManager("../yaml/connections.example.yaml", "../yaml/products.yaml", "../yaml/rules.yaml")
+    producer_system = TaskDivisionManager("../yaml/connections.yaml", "../yaml/products.yaml", "../yaml/rules.yaml")
 
     try:
 

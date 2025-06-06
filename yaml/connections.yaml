@@ -1,13 +1,13 @@
 server:
   ws1:
-    host: localhost
+    host: r4.local
     port: 1883
-    token: ABC123
+    token: 
   ws2:
-    host: localhost
+    host: r6.local
     port: 1883
-    token: ABC123
+    token: 
   ws3:
-    host: localhost
+    host: r1.local
     port: 1883
-    token: ABC123
+    token: 
