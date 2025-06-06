@@ -15,4 +15,4 @@ COPY ./app/ ./app/
 
 EXPOSE 3275
 
-CMD [ "sh", "-c",  "cd app && python3 main.py" ]
+CMD [ "sh", "-c", "sleep 30 && cd app && python3 main.py" ]
