@@ -3,7 +3,7 @@ version: '3.8'
 services:
   task_division:
     image: ghcr.io/smartworkmcd/taskdivision:latest
-    container_name: taskdevision
+    container_name: taskdivision
     restart: unless-stopped
     environment:
       - number_remaining_before_assign=2
