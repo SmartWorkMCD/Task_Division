@@ -10,9 +10,9 @@ RUN apt-get update && \
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./yaml/ .
-COPY ./app/ .
+COPY ./yaml/ ./yaml/
+COPY ./app/ ./app/
 
 EXPOSE 3275
 
-CMD [ "cd app && python3 main.py" ]
+CMD [ "sh", "-c",  "cd app && python3 main.py" ]
