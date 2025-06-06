@@ -1,16 +1,16 @@
 server:
   ws1:
-    host: r4.local
+    host: 172.31.1.110
     port: 1883
     username: admin
     token: admin
   ws2:
-    host: r6.local
+    host: 172.31.1.111
     port: 1883
     username: admin
     token: admin
   ws3:
-    host: r1.local
+    host: 172.31.1.116
     port: 1883
     username: admin
     token: admin

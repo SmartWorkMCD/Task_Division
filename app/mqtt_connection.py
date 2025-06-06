@@ -15,7 +15,7 @@ class MQTTConnection:
         self.port = port
         self.username = username
         self.token = token
-        self.client.username_pw_set(username, token)
+        self.client.username_pw_set(username=username, password=token)
         self.connected = False
         self.client.on_connect = self.on_connect
         self.client.on_publish = self.on_publish
@@ -46,7 +46,7 @@ class MQTTConnection:
     def connect(self):
         try:
             self.client.connect(self.host, self.port)
-            self.client.username_pw_set(self.username, self.token)
+            self.client.username_pw_set(username=self.username, password=self.token)
             logging.info(f"Connecting to broker {self.broker_id} at {self.host}:{self.port} with username {self.username}")
             self.client.loop_start()
             while not self.connected:
