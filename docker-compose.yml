@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     environment:
       - number_remaining_before_assign: 2
-        number_next_products_to_assign_tasks: 3
-        EWMA_weight: 0.2
+      - number_next_products_to_assign_tasks: 3
+      - EWMA_weight: 0.2
     networks:
       custom_net:
 
