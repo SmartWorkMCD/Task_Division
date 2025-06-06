@@ -7,12 +7,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class MQTTConnection:
-    def __init__(self, broker_id: str, host: str, port: int, token: str, on_message_callback=None):
+    def __init__(self, broker_id: str, host: str, port: int, username: str, token: str, on_message_callback=None):
         self.broker_id = broker_id
         self.client = mqtt.Client(client_id=f"producer_{broker_id}")
         self.client.username_pw_set(token)
         self.host = host
         self.port = port
+        self.username = username
+        self.token = token
+        self.client.username_pw_set(username, token)
         self.connected = False
         self.client.on_connect = self.on_connect
         self.client.on_publish = self.on_publish
@@ -43,6 +46,8 @@ class MQTTConnection:
     def connect(self):
         try:
             self.client.connect(self.host, self.port)
+            self.client.username_pw_set(self.username, self.token)
+            logging.info(f"Connecting to broker {self.broker_id} at {self.host}:{self.port} with username {self.username}")
             self.client.loop_start()
             while not self.connected:
                 time.sleep(0.1)

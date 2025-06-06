@@ -22,7 +22,7 @@ class MQTTSystem:
     def _setup_connections(self):
         try:
             for broker_id, conn in self.connections_config['server'].items():
-                connection = MQTTConnection(broker_id, conn['host'], conn['port'], conn['token'], self.message_handler)
+                connection = MQTTConnection(broker_id, conn['host'], conn['port'], conn['username'], conn['token'], self.message_handler)
                 self.connections[broker_id] = connection
             return self.connections
         except Exception as e:
