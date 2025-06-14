@@ -10,10 +10,9 @@ class ProductManager:
     
     def get_task_by_color(self, color: str):
         color_to_task = {
-            'Yellow': 'T1A',
-            'Blue': 'T1B',
-            'Green': 'T1C',
-            'Red': 'T1D',
+            'Red': 'T1A',
+            'Green': 'T1B',
+            'Blue': 'T1C',
         }
         return color_to_task.get(color)
     

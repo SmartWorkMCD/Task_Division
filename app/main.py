@@ -14,12 +14,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 REFERENCE_VALUES = {
     'T1.A': 20,
     'T1.B': 20,
-    'T1.C': 10,
-    'T1.D': 10,
+    'T1.C': 20,
     'T2': 10,
-    'T3.A': 6,
-    'T3.B': 7,
-    'T3.C': 5,
+    'T3.A': 15,
 }
 
 class TaskDivisionManager:
@@ -39,19 +36,16 @@ class TaskDivisionManager:
         self.products_manager = ProductManager(YamlLoader.load_yaml(products_file))
         self.task_manager = TaskManager(YamlLoader.load_yaml(rules_file))
         self.possible_server_tasks = {
-            'ws1': ['T1A', 'T1B', 'T1C', 'T1D'],
-            'ws2': ['T1C', 'T1D', 'T2'],
-            'ws3': ['T3A', 'T3B', 'T3C'],
+            'ws1': ['T1A', 'T1B', 'T1C'],
+            'ws2': ['T1B', 'T1C', 'T2'],
+            'ws3': ['T3A'],
         }
         self.input_times = { # in the first initialization, the EWMA(lag) is None, and the atual is the reference value
             "T1A": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.A']}},
-            "T1B": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.B']}},
+            "T1B": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.B']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.B']}},
             "T1C": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.C']}},
-            "T1D": {"ws1": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}, "ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T1.D']}},
             "T2A": {"ws2": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T2']}},
             "T3A": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.A']}},
-            "T3B": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.B']}},
-            "T3C": {"ws3": {"EWMA(lag)": None, "atual": REFERENCE_VALUES['T3.C']}}
         }
         self.input_times = self.update_times(self.input_times, weight=self.weight)
         self.all_tasks = {}
@@ -101,8 +95,6 @@ class TaskDivisionManager:
             # No fim adiciona sempre a tarefa T2, T3A, T3B e T3C
         subtasks.extend(['T2A'] * 1)
         subtasks.extend(['T3A'] * 1)
-        subtasks.extend(['T3B'] * 1)
-        subtasks.extend(['T3C'] * 1)
         return subtasks
     
     def update_times(self, inp_times, weight = None):
