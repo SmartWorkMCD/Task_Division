@@ -10,7 +10,7 @@ server:
     username: admin
     token: admin
   ws3:
-    host: 172.31.1.116
+    host: 172.31.1.114 #172.31.1.116
     port: 1883
     username: admin
     token: admin
