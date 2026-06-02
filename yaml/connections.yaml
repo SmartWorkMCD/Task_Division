@@ -1,6 +1,6 @@
 server:
   ws1:
-    host: 172.31.1.110
+    host: 172.31.1.129
     port: 1883
     username: admin
     token: admin
